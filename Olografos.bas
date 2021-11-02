@@ -3,7 +3,6 @@ Option Explicit
 
 Dim N1(1 To 3, 1 To 9) As String
 Dim N2(1 To 4) As String
-Dim N3(1 To 4) As String
 
 ' Represents the gender of the variable
 Public Enum GenderEnum
@@ -24,11 +23,9 @@ Public Function Olografos(Num As Double, Gender As GenderEnum) As String
     Dim b As Integer
     Dim Gen As GenderEnum
     Dim triada As Integer
-    Dim Decimicals As Boolean
 
     InitNames
     iNum = Int(Num)
-    Decimicals = iNum <> Num
     If iNum = 0 Then
         Result = "μηδέν"
         GoTo GiveResult
@@ -170,9 +167,4 @@ Private Sub InitNames()
     N2(2) = "εκατομμύρι"
     N2(3) = "δισεκατομμύρι"
     N2(4) = "τρισεκατομμύρι"
-
-    N3(1) = "δέκατα"
-    N3(2) = "εκατοστά"
-    N3(3) = "χιλιοστά"
-    N3(4) = "δεκάκις χιλιοστά"
 End Sub
