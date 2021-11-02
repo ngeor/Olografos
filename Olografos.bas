@@ -17,7 +17,7 @@ End Function
 
 Public Function Olografos(Num As Double, Gender As GenderEnum) As String
     InitNames
-    Dim iNum As Integer
+    Dim iNum As Long
     iNum = Int(Num)
     If iNum = 0 Then
         Olografos = "Μηδέν"
@@ -26,54 +26,66 @@ Public Function Olografos(Num As Double, Gender As GenderEnum) As String
     End If
 End Function
 
-Private Function OlografosInt(iNum As Integer, Gender As GenderEnum) As String
-    Dim s As String
+Private Function OlografosInt(iNum As Long, Gender As GenderEnum) As String
     Dim Result As String
-    Dim h As String
-    Dim b As Integer
     Dim Gen As GenderEnum
     Dim triada As Integer
-
-    s = Trim(Str(iNum))
-    If Len(s) Mod 3 <> 0 Then s = String(3 - (Len(s) Mod 3), "0") + s
-    b = 0
+    Dim temp As Long
+    Dim groupValue As Integer
+    Dim h As String
+    Dim part As String
+    
     Result = ""
-    While b < Len(s)
-        triada = (Len(s) - b) \ 3
-        ' η τριάδα μετριέται από δεξιά
-        ' π.χ η τιμή 2 είναι η τριάδα των χιλιάδων
-        If triada = 1 Then
-            Gen = Gender
-        ElseIf triada = 2 Then
-            Gen = Feminin
-        Else
-            Gen = Neutral
-        End If
-        If triada = 2 And Val(Mid(s, b + 1, 3)) = 1 Then
-            Result = Result + "χίλιες "
-        Else
-            Result = Result + OloTriada(Mid(s, b + 1, 3), Gen) + " "
-            If triada <> 1 Then
-                h = N2(triada - 1)
-                If triada > 2 Then
-                    If Val(Mid(s, b + 1, 3)) = 1 Then
-                        h = h + "ο"
-                    Else
-                        h = h + "α"
-                    End If
-                End If
-                Result = Result + h + " "
+    
+    ' copy input to avoid mutating
+    temp = iNum
+    
+    ' η τριάδα μετριέται από αριστερά
+    ' μηδέν -> 0..999
+    ' ένα   -> 001_000..999_999
+    triada = 0
+    While temp > 0
+        ' get the last 3 digits
+        groupValue = temp Mod 1000
+        If groupValue > 0 Then
+    
+            ' determine gender for this group
+            If triada = 0 Then
+                Gen = Gender
+            ElseIf triada = 1 Then ' χιλιάδες
+                Gen = Feminin
+            Else ' εκατομμύρια ++
+                Gen = Neutral
             End If
+            
+            If triada = 1 And groupValue = 1 Then
+                part = "χίλιες"
+            Else
+                part = OloTriada(groupValue, Gen)
+                If triada > 0 Then
+                    h = N2(triada)
+                    If triada >= 2 Then
+                        If groupValue = 1 Then
+                            h = h + "ο"
+                        Else
+                            h = h + "α"
+                        End If
+                    End If
+                    part = Join(part, h)
+                End If
+            End If
+            Result = Join(part, Result)
         End If
-
-        b = b + 3
+        temp = temp \ 1000
+        triada = triada + 1
     Wend
+
 GiveResult:
     Mid(Result, 1, 1) = UCase(Mid(Result, 1, 1))
     OlografosInt = RTrim(Result)
 End Function
 
-Private Function OloTriada(s As String, Gender As GenderEnum) As String
+Private Function OloTriada(groupValue As Integer, Gender As GenderEnum) As String
     Dim b As Integer
     Dim i As Integer
     Dim i2 As Integer
@@ -82,8 +94,15 @@ Private Function OloTriada(s As String, Gender As GenderEnum) As String
 
     Result = ""
     For b = 1 To 3
-        i = Asc(Mid(s, b, 1)) - 48
-        'Αφαιρώ το 48 γιατί asc(0)=48
+        Select Case b
+        Case 1
+            i = groupValue \ 100
+        Case 2
+            i = (groupValue Mod 100) \ 10
+        Case 3
+            i = groupValue Mod 10
+        End Select
+
         If i <> 0 Then
             h = N1(4 - b, i)
 
@@ -100,7 +119,7 @@ Private Function OloTriada(s As String, Gender As GenderEnum) As String
                     End If
                 Case 2
                     If i = 1 Then
-                        i2 = Asc(Mid(s, 3, 1)) - 48
+                        i2 = groupValue Mod 10
                         If i2 = 1 Or i2 = 2 Then
                             If i2 = 1 Then
                                 h = "έντεκα"
@@ -172,3 +191,17 @@ Private Sub InitNames()
     N2(3) = "δισεκατομμύρι"
     N2(4) = "τρισεκατομμύρι"
 End Sub
+
+Private Function Join(First As String, Second As String) As String
+    If Len(First) > 0 Then
+        If Len(Second) > 0 Then
+            Join = First & " " & Second
+        Else
+            ' second string is empty
+            Join = First
+        End If
+    Else
+        ' first string is empty
+        Join = Second
+    End If
+End Function
