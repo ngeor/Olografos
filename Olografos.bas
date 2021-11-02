@@ -82,82 +82,91 @@ Private Function OlografosInt(iNum As Long, Gender As GenderEnum) As String
 
 GiveResult:
     Mid(Result, 1, 1) = UCase(Mid(Result, 1, 1))
-    OlografosInt = RTrim(Result)
+    OlografosInt = Result
 End Function
 
 Private Function OloTriada(groupValue As Integer, Gender As GenderEnum) As String
-    Dim b As Integer
-    Dim i As Integer
-    Dim i2 As Integer
-    Dim Result As String
-    Dim h As String
+    ' TODO verify groupValue is 0..999
+    OloTriada = Join(Ekatontades(groupValue, Gender), DekadesMonades(groupValue, Gender))
+End Function
 
-    Result = ""
-    For b = 1 To 3
-        Select Case b
-        Case 1
-            i = groupValue \ 100
-        Case 2
-            i = (groupValue Mod 100) \ 10
-        Case 3
-            i = groupValue Mod 10
-        End Select
-
-        If i <> 0 Then
-            h = N1(4 - b, i)
-
-            Select Case b
-                Case 1
-                    If i <> 1 Then
-                        If Gender = Masculin Then
-                            h = h + "οι"
-                        ElseIf Gender = Feminin Then
-                            h = h + "ες"
-                        Else
-                            h = h + "α"
-                        End If
-                    End If
-                Case 2
-                    If i = 1 Then
-                        i2 = groupValue Mod 10
-                        If i2 = 1 Or i2 = 2 Then
-                            If i2 = 1 Then
-                                h = "έντεκα"
-                            ElseIf i2 = 2 Then
-                                h = "δώδεκα"
-                            End If
-                            Result = Result + h
-                            Exit For
-                        End If
-                    End If
-                Case 3
-                    If i = 1 Then
-                        If Gender = Feminin Then
-                            h = "μία"
-                        End If
-                    ElseIf i = 3 Then
-                        If Gender = Neutral Then
-                            h = h + "ία"
-                        Else
-                            h = h + "εις"
-                        End If
-                    ElseIf i = 4 Then
-                        If Gender = Neutral Then
-                            h = h + "α"
-                        Else
-                            h = h + "ις"
-                        End If
-                    End If
-            End Select
-
-            Result = Result + h
-            If b <> 3 Then Result = Result + " "
+Private Function Ekatontades(groupValue As Integer, Gender As GenderEnum) As String
+    Dim value As Integer
+    Dim temp As String
+    Dim genderSuffix As String
+    value = groupValue \ 100
+    If value >= 1 And value <= 9 Then
+        temp = N1(3, value)
+        If value >= 2 Then
+            If Gender = Masculin Then
+                genderSuffix = "οι" ' διακόσιοι
+            ElseIf Gender = Feminin Then
+                genderSuffix = "ες" ' διακόσιες
+            Else
+                genderSuffix = "α"  ' διακόσια
+            End If
+        Else
+            genderSuffix = "" ' εκατό
         End If
-    Next b
-    OloTriada = Result
+        Ekatontades = temp & genderSuffix
+    Else
+        Ekatontades = ""
+    End If
+End Function
+
+Private Function DekadesMonades(groupValue As Integer, Gender As GenderEnum) As String
+    Dim dekades As Integer
+    Dim monades As Integer
+    Dim temp As String
+    
+    dekades = (groupValue Mod 100) \ 10
+    monades = groupValue Mod 10
+    If dekades = 1 And monades = 1 Then
+        DekadesMonades = "έντεκα"
+    ElseIf dekades = 1 And monades = 2 Then
+        DekadesMonades = "δώδεκα"
+    ElseIf dekades = 0 And monades = 1 Then
+        Select Case Gender
+        Case Masculin
+            DekadesMonades = "ένας"
+        Case Feminin
+            DekadesMonades = "μία"
+        Case Neutral
+            DekadesMonades = "ένα"
+        End Select
+    Else
+        temp = ""
+        If monades >= 1 And monades <= 9 Then
+            temp = N1(1, monades)
+            If monades = 3 Then
+                Select Case Gender
+                Case Neutral
+                    temp = temp & "α"   ' τρία
+                Case Else
+                    temp = temp & "εις" ' τρεις
+                End Select
+            ElseIf monades = 4 Then
+                Select Case Gender
+                Case Neutral
+                    temp = temp & "α"   ' τέσσερα
+                Case Else
+                    temp = temp & "ις" ' τέσσερις
+                End Select
+            End If
+        End If
+        If dekades >= 1 And dekades <= 9 Then
+            If dekades = 1 Then
+                temp = N1(2, dekades) & temp ' δεκαπέντε, χωρίς κενό
+            Else
+                temp = Join(N1(2, dekades), temp) ' είκοσι πέντε, με κενό
+            End If
+        End If
+        DekadesMonades = temp
+    End If
 End Function
 
 Private Sub InitNames()
+    ' TODO initialize only once
     N1(1, 1) = "ένα"
     N1(1, 2) = "δύο"
     N1(1, 3) = "τρ"
