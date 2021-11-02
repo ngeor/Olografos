@@ -16,7 +16,17 @@ Public Function OlografosÄñ÷(Num As Double) As String
 End Function
 
 Public Function Olografos(Num As Double, Gender As GenderEnum) As String
-    Dim iNum As Double
+    InitNames
+    Dim iNum As Integer
+    iNum = Int(Num)
+    If iNum = 0 Then
+        Olografos = "ÌçäÝí"
+    Else
+        Olografos = OlografosInt(iNum, Gender)
+    End If
+End Function
+
+Private Function OlografosInt(iNum As Integer, Gender As GenderEnum) As String
     Dim s As String
     Dim Result As String
     Dim h As String
@@ -24,12 +34,6 @@ Public Function Olografos(Num As Double, Gender As GenderEnum) As String
     Dim Gen As GenderEnum
     Dim triada As Integer
 
-    InitNames
-    iNum = Int(Num)
-    If iNum = 0 Then
-        Result = "ìçäÝí"
-        GoTo GiveResult
-    End If
     s = Trim(Str(iNum))
     If Len(s) Mod 3 <> 0 Then s = String(3 - (Len(s) Mod 3), "0") + s
     b = 0
@@ -64,9 +68,9 @@ Public Function Olografos(Num As Double, Gender As GenderEnum) As String
 
         b = b + 3
     Wend
-    GiveResult:
+GiveResult:
     Mid(Result, 1, 1) = UCase(Mid(Result, 1, 1))
-    Olografos = RTrim(Result)
+    OlografosInt = RTrim(Result)
 End Function
 
 Private Function OloTriada(s As String, Gender As GenderEnum) As String
